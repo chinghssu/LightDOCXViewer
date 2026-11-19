@@ -1,5 +1,7 @@
 # Light DOCX Viewer
 
+**English** | [繁體中文](README.zh-TW.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [Deutsch](README.de.md) | [Español](README.es.md) | [Français](README.fr.md)
+
 A minimal, native macOS reader for `.docx` files that puts **text and inline images in reading order**—without recreating Microsoft Word's page layout.
 
 Designed for a simple workflow: open a document, read its contents, copy text, and copy embedded images into another app.
@@ -76,7 +78,8 @@ This is a **content-oriented reader**, not a layout-faithful Word renderer.
 ├── Info.plist              # App bundle metadata and DOCX file association
 ├── build.command           # One-command macOS build and icon generation
 ├── LICENSE                 # MIT License
-└── README.md
+├── README.md               # English documentation
+└── README.*.md             # Translated documentation
 ```
 
 ## How it works
@@ -94,33 +97,3 @@ Bug reports, reproducible sample documents (with sensitive information removed),
 Released under the [MIT License](LICENSE).
 
 Microsoft and Word are trademarks of Microsoft Corporation. This project is not affiliated with or endorsed by Microsoft.
-
----
-
-## 繁體中文說明
-
-Light DOCX Viewer 是一個不需要 Word、Pages 或 Python 的原生 AppKit DOCX 閱讀器原型。它只讀取 DOCX 主文件中的文字與行內圖片，依照出現順序排列，支援文字選取，以及點選圖片後 `⌘C` 複製圖片。
-
-### 建置
-
-1. macOS 12 或更新版本。先安裝 Apple Command Line Tools：`xcode-select --install`（若已安裝可略過）。
-2. 在 Terminal 中進入本資料夾，執行 `bash build.command`。建置腳本會自動將 `AppIcon.png` 轉為 `AppIcon.icns` 並放入 `.app/Contents/Resources`，不需要開啟 Xcode。
-3. 完成後會產生 `Light DOCX Viewer.app` 並自動開啟，使用 `⌘O` 選取 DOCX。
-4. 若想雙擊開啟 DOCX，可在 Finder 對 DOCX 按右鍵 →「取得資訊」→「打開檔案的應用程式」，選擇建置好的 App。
-
-### 使用方式
-
-- 文字：滑鼠拖曳選取，`⌘C` 複製。
-- 圖片：點選圖片，`⌘C` 複製，切換至其他 App 後 `⌘V` 貼上。
-- 僅供閱讀，不支援編輯或儲存 DOCX。
-
-### 限制
-
-- 支援主要文件 XML 中的段落、表格內文字、文字換行，以及行內 DrawingML 圖片。
-- 不重現原始字型、頁面、表格格線與欄位排版。
-- 浮動圖片、VML 舊式圖片、文字方塊、註解、頁首、頁尾、註腳、外部連結圖片可能無法顯示。
-- 開啟時解壓縮至暫存目錄，載入後立即清除。
-
-### 授權
-
-本專案以 [MIT License](LICENSE) 釋出。
