@@ -42,6 +42,38 @@ Le script compile `Light DOCX Viewer.app` dans le dossier du projet, génère `A
 
 **Remarque :** il s'agit d'un prototype compilé localement et non signé, et non d'une version macOS notarisée. Une icône d'application barrée n'indique pas forcément une mise en quarantaine par Gatekeeper ; elle peut signaler un paquet d'application incompatible ou invalide. Vérifiez d'abord la sortie de la compilation et le paquet de l'application plutôt que de contourner les réglages de sécurité de macOS.
 
+## Signature et notarisation (facultatif)
+
+Pour distribuer l'application afin qu'elle s'ouvre sur d'autres Mac sans avertissement de Gatekeeper, il faut la signer avec un certificat **Developer ID Application** et la faire notariser par Apple. Un compte Apple Developer payant est nécessaire.
+
+1. Vérifiez qu'un certificat `Developer ID Application` se trouve dans votre trousseau de session (`security find-identity -v -p codesigning`).
+2. Créez un mot de passe pour app sur account.apple.com, puis enregistrez les identifiants de notarisation dans le trousseau (une seule fois) :
+
+   ```bash
+   xcrun notarytool store-credentials "notary-profile" \
+     --apple-id "<Apple ID>" --team-id "<Team ID>"
+   ```
+
+3. Compilez, puis signez, notarisez et agrafez :
+
+   ```bash
+   bash build.command
+   bash sign-and-notarize.command
+   ```
+
+Le script signe une copie de l'application avec le Hardened Runtime, la soumet avec `notarytool`, agrafe le ticket de notarisation, la vérifie avec `spctl` et écrit `LightDOCXViewer-<version>.zip` dans le dossier du projet, prêt à être joint à une GitHub Release.
+
+- Pour signer sans notariser (tests locaux) :
+
+  ```bash
+  bash sign-and-notarize.command --sign-only
+  ```
+
+  Cela produit `LightDOCXViewer-<version>-unnotarized.zip`.
+- Variables d'environnement facultatives : `SIGN_IDENTITY` (par défaut, la première identité Developer ID Application) et `NOTARY_PROFILE` (par défaut, `notary-profile`).
+- La signature s'effectue dans un répertoire temporaire, car iCloud Drive et d'autres fournisseurs de fichiers rajoutent sans cesse des métadonnées Finder dans les dossiers synchronisés, ce qui fait échouer `codesign`.
+- Ne commitez jamais votre identifiant Apple, votre mot de passe pour app ni les fichiers zip de publication dans le dépôt.
+
 ## Utilisation
 
 Ouvrez l'application et appuyez sur `⌘O` pour choisir un fichier `.docx`. Vous pouvez aussi sélectionner un DOCX dans le Finder et choisir **Ouvrir avec → Light DOCX Viewer**.
@@ -77,6 +109,7 @@ Il s'agit d'un **lecteur axé sur le contenu**, et non d'un moteur de rendu fid�
 ├── AppIcon.png             # Image source de l'icône de l'application macOS
 ├── Info.plist              # Métadonnées du paquet d'application et association des fichiers DOCX
 ├── build.command           # Compilation macOS et génération de l'icône en une seule commande
+├── sign-and-notarize.command  # Signature Developer ID, notarisation et agrafage
 ├── LICENSE                 # Licence MIT
 ├── README.md               # Documentation en anglais
 └── README.*.md             # Documentation traduite

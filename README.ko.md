@@ -42,6 +42,38 @@
 
 **참고:** 이것은 로컬에서 빌드된 서명되지 않은 프로토타입이며, 공증(notarized)된 macOS 릴리스가 아닙니다. 앱 아이콘에 사선이 표시되는 것은 반드시 Gatekeeper 격리 문제 때문은 아니며, 앱 번들이 호환되지 않거나 유효하지 않다는 뜻일 수 있습니다. macOS 보안 설정을 우회하기 전에 먼저 빌드 출력과 앱 번들을 확인하세요.
 
+## 서명 및 공증 (선택)
+
+다른 Mac에서 Gatekeeper 경고 없이 열리도록 배포하려면 **Developer ID Application** 인증서로 서명하고 Apple 공증을 받아야 합니다. 유료 Apple Developer 계정이 필요합니다.
+
+1. 로그인 키체인에 `Developer ID Application` 인증서가 있는지 확인합니다 (`security find-identity -v -p codesigning`).
+2. account.apple.com에서 앱 암호를 만든 뒤, 공증용 자격 증명을 키체인에 저장합니다 (최초 1회):
+
+   ```bash
+   xcrun notarytool store-credentials "notary-profile" \
+     --apple-id "<Apple ID>" --team-id "<Team ID>"
+   ```
+
+3. 빌드한 다음 서명, 공증, 스테이플을 실행합니다:
+
+   ```bash
+   bash build.command
+   bash sign-and-notarize.command
+   ```
+
+스크립트는 앱 사본에 Hardened Runtime으로 서명하고, `notarytool`로 제출하고, 공증 티켓을 스테이플하고, `spctl`로 확인한 뒤, GitHub Release에 첨부할 수 있는 `LightDOCXViewer-<버전>.zip`을 프로젝트 폴더에 만듭니다.
+
+- 공증 없이 서명만 하려면 (로컬 테스트용):
+
+  ```bash
+  bash sign-and-notarize.command --sign-only
+  ```
+
+  `LightDOCXViewer-<버전>-unnotarized.zip`이 만들어집니다.
+- 선택 환경 변수: `SIGN_IDENTITY` (기본값은 첫 번째 Developer ID Application 인증서), `NOTARY_PROFILE` (기본값은 `notary-profile`).
+- iCloud Drive 같은 파일 제공자가 동기화 폴더에 Finder 메타데이터를 계속 다시 붙여 `codesign`이 실패하므로, 서명은 임시 디렉터리에서 진행합니다.
+- Apple ID, 앱 암호, 배포용 zip 파일은 절대 저장소에 커밋하지 마세요.
+
 ## 사용 방법
 
 앱을 열고 `⌘O`를 눌러 `.docx` 파일을 선택합니다. 또는 Finder에서 DOCX를 선택하고 **다음으로 열기 → Light DOCX Viewer**를 선택합니다.
@@ -77,6 +109,7 @@
 ├── AppIcon.png             # macOS 앱 아이콘 원본 이미지
 ├── Info.plist              # 앱 번들 메타데이터와 DOCX 파일 연결
 ├── build.command           # macOS 앱 빌드와 아이콘 생성을 한 번에 실행
+├── sign-and-notarize.command  # Developer ID 서명, 공증, 스테이플
 ├── LICENSE                 # MIT 라이선스
 ├── README.md               # 영어 문서
 └── README.*.md             # 번역된 문서

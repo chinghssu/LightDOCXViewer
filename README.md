@@ -42,6 +42,38 @@ The script builds `Light DOCX Viewer.app` in the project directory, generates `A
 
 **Note:** This is a locally built, unsigned prototype, not a notarized macOS release. A crossed-out app icon is not necessarily a Gatekeeper quarantine issue; it may indicate an incompatible or invalid app bundle. Check the build output and app bundle first rather than bypassing macOS security settings.
 
+## Signing and notarization (optional)
+
+To distribute the app so it opens on other Macs without Gatekeeper warnings, sign it with a **Developer ID Application** certificate and notarize it with Apple. This requires a paid Apple Developer account.
+
+1. Make sure a `Developer ID Application` certificate is in your login keychain (`security find-identity -v -p codesigning`).
+2. Create an app-specific password at account.apple.com, then store notarization credentials in the keychain (one-time setup):
+
+   ```bash
+   xcrun notarytool store-credentials "notary-profile" \
+     --apple-id "<Apple ID>" --team-id "<Team ID>"
+   ```
+
+3. Build, then sign, notarize, and staple:
+
+   ```bash
+   bash build.command
+   bash sign-and-notarize.command
+   ```
+
+The script signs a copy of the app with the hardened runtime, submits it with `notarytool`, staples the ticket, checks it with `spctl`, and writes `LightDOCXViewer-<version>.zip` to the project folder, ready to attach to a GitHub Release.
+
+- To sign without notarizing (for local testing), run:
+
+  ```bash
+  bash sign-and-notarize.command --sign-only
+  ```
+
+  This writes `LightDOCXViewer-<version>-unnotarized.zip`.
+- Optional environment variables: `SIGN_IDENTITY` (defaults to the first Developer ID Application identity) and `NOTARY_PROFILE` (defaults to `notary-profile`).
+- Signing happens in a temporary directory because iCloud Drive and other file providers keep adding Finder metadata to synced folders, which makes `codesign` fail.
+- Never commit your Apple ID, app-specific password, or release zips to the repository.
+
 ## Usage
 
 Open the app and press `⌘O` to choose a `.docx` file. Alternatively, select a DOCX in Finder and choose **Open With → Light DOCX Viewer**.
@@ -77,6 +109,7 @@ This is a **content-oriented reader**, not a layout-faithful Word renderer.
 ├── AppIcon.png             # Source artwork for the macOS app icon
 ├── Info.plist              # App bundle metadata and DOCX file association
 ├── build.command           # One-command macOS build and icon generation
+├── sign-and-notarize.command  # Developer ID signing, notarization, and stapling
 ├── LICENSE                 # MIT License
 ├── README.md               # English documentation
 └── README.*.md             # Translated documentation

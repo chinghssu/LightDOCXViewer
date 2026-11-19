@@ -42,6 +42,38 @@ Das Skript baut `Light DOCX Viewer.app` im Projektordner, erzeugt `AppIcon.icns`
 
 **Hinweis:** Dies ist ein lokal gebauter, nicht signierter Prototyp und keine notarisierte macOS-Version. Ein durchgestrichenes App-Symbol bedeutet nicht unbedingt eine Gatekeeper-Quarantäne; es kann auch auf ein inkompatibles oder ungültiges App-Bundle hinweisen. Prüfen Sie zuerst die Build-Ausgabe und das App-Bundle, statt die Sicherheitseinstellungen von macOS zu umgehen.
 
+## Signierung und Notarisierung (optional)
+
+Damit sich die App auf anderen Macs ohne Gatekeeper-Warnung öffnen lässt, muss sie mit einem **Developer ID Application**-Zertifikat signiert und von Apple notarisiert werden. Dafür ist ein kostenpflichtiger Apple-Developer-Account nötig.
+
+1. Prüfen Sie, ob ein `Developer ID Application`-Zertifikat in Ihrem Anmeldeschlüsselbund liegt (`security find-identity -v -p codesigning`).
+2. Erstellen Sie unter account.apple.com ein app-spezifisches Passwort und speichern Sie die Zugangsdaten für die Notarisierung im Schlüsselbund (einmalig):
+
+   ```bash
+   xcrun notarytool store-credentials "notary-profile" \
+     --apple-id "<Apple ID>" --team-id "<Team ID>"
+   ```
+
+3. Bauen Sie die App und signieren, notarisieren und „stapeln“ Sie sie anschließend:
+
+   ```bash
+   bash build.command
+   bash sign-and-notarize.command
+   ```
+
+Das Skript signiert eine Kopie der App mit Hardened Runtime, reicht sie per `notarytool` ein, heftet das Notarisierungsticket an, prüft sie mit `spctl` und legt `LightDOCXViewer-<Version>.zip` im Projektordner ab – bereit zum Anhängen an ein GitHub Release.
+
+- Nur signieren, ohne Notarisierung (für lokale Tests):
+
+  ```bash
+  bash sign-and-notarize.command --sign-only
+  ```
+
+  Dabei entsteht `LightDOCXViewer-<Version>-unnotarized.zip`.
+- Optionale Umgebungsvariablen: `SIGN_IDENTITY` (Standard: erste Developer-ID-Application-Identität) und `NOTARY_PROFILE` (Standard: `notary-profile`).
+- Signiert wird in einem temporären Verzeichnis, weil iCloud Drive und andere Dateianbieter in synchronisierten Ordnern immer wieder Finder-Metadaten hinzufügen, wodurch `codesign` fehlschlägt.
+- Committen Sie niemals Ihre Apple-ID, Ihr app-spezifisches Passwort oder Release-ZIP-Dateien in das Repository.
+
 ## Verwendung
 
 Öffnen Sie die App und drücken Sie `⌘O`, um eine `.docx`-Datei auszuwählen. Alternativ wählen Sie eine DOCX-Datei im Finder aus und wählen **Öffnen mit → Light DOCX Viewer**.
@@ -77,6 +109,7 @@ Dies ist ein **inhaltsorientierter Reader**, kein layoutgetreuer Word-Renderer.
 ├── AppIcon.png             # Ausgangsgrafik für das macOS-App-Symbol
 ├── Info.plist              # Metadaten des App-Bundles und DOCX-Dateizuordnung
 ├── build.command           # macOS-Build und Symbolerzeugung mit einem Befehl
+├── sign-and-notarize.command  # Developer-ID-Signierung, Notarisierung und Stapling
 ├── LICENSE                 # MIT-Lizenz
 ├── README.md               # Englische Dokumentation
 └── README.*.md             # Übersetzte Dokumentation

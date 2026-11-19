@@ -42,6 +42,38 @@
 
 **注意：** これはローカルでビルドされた未署名のプロトタイプであり、公証（notarize）済みの macOS リリースではありません。アプリアイコンに斜線が表示される場合、必ずしも Gatekeeper の隔離が原因とは限らず、アプリバンドルが互換性のない、または無効なものである可能性があります。macOS のセキュリティ設定を回避する前に、まずビルド出力とアプリバンドルを確認してください。
 
+## 署名と公証（任意）
+
+他の Mac で Gatekeeper の警告なしに開けるよう配布するには、**Developer ID Application** 証明書で署名し、Apple の公証を受ける必要があります。有料の Apple Developer アカウントが必要です。
+
+1. ログインキーチェーンに `Developer ID Application` 証明書があることを確認します（`security find-identity -v -p codesigning`）。
+2. account.apple.com で App 用パスワードを作成し、公証用の認証情報をキーチェーンに保存します（初回のみ）：
+
+   ```bash
+   xcrun notarytool store-credentials "notary-profile" \
+     --apple-id "<Apple ID>" --team-id "<Team ID>"
+   ```
+
+3. ビルドしてから、署名・公証・ステープルを実行します：
+
+   ```bash
+   bash build.command
+   bash sign-and-notarize.command
+   ```
+
+スクリプトはアプリのコピーに Hardened Runtime 付きで署名し、`notarytool` で提出、公証チケットをステープルし、`spctl` で確認したうえで、GitHub Release に添付できる `LightDOCXViewer-<バージョン>.zip` をプロジェクトフォルダに出力します。
+
+- 公証せずに署名だけ行う場合（ローカルテスト用）：
+
+  ```bash
+  bash sign-and-notarize.command --sign-only
+  ```
+
+  `LightDOCXViewer-<バージョン>-unnotarized.zip` が出力されます。
+- 任意の環境変数：`SIGN_IDENTITY`（既定は最初の Developer ID Application 証明書）、`NOTARY_PROFILE`（既定は `notary-profile`）。
+- iCloud Drive などのファイルプロバイダは同期フォルダに Finder メタデータを付け直し、`codesign` が失敗する原因になるため、署名は一時ディレクトリで行います。
+- Apple ID、App 用パスワード、リリース用 zip はリポジトリにコミットしないでください。
+
 ## 使い方
 
 アプリを開き、`⌘O` で `.docx` ファイルを選択します。または Finder で DOCX を選択し、**「このアプリケーションで開く」→ Light DOCX Viewer** を選びます。
@@ -77,6 +109,7 @@
 ├── AppIcon.png             # macOS アプリアイコンの元画像
 ├── Info.plist              # アプリバンドルのメタデータと DOCX ファイルの関連付け
 ├── build.command           # macOS アプリのビルドとアイコン生成を一括で実行
+├── sign-and-notarize.command  # Developer ID による署名、公証、ステープル
 ├── LICENSE                 # MIT ライセンス
 ├── README.md               # 英語のドキュメント
 └── README.*.md             # 各言語に翻訳されたドキュメント

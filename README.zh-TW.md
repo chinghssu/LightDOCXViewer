@@ -42,6 +42,38 @@
 
 **注意：** 這是本機建置、未簽署的原型，不是經過 Apple 公證（notarized）的正式版本。如果 App 圖示出現斜線，不一定是 Gatekeeper 隔離造成，也可能是 App bundle 不相容或無效。請先檢查建置輸出與 App bundle，不要直接繞過 macOS 的安全設定。
 
+## 簽章與公證（選用）
+
+若要發佈給其他人使用，並讓 App 在其他 Mac 上開啟時不被 Gatekeeper 擋下，需要用 **Developer ID Application** 憑證簽章，並送 Apple 公證。這需要付費的 Apple Developer 帳號。
+
+1. 確認登入鑰匙圈中有 `Developer ID Application` 憑證（`security find-identity -v -p codesigning`）。
+2. 到 account.apple.com 產生「App 專用密碼」，再把公證用的登入資訊存進鑰匙圈（只需設定一次）：
+
+   ```bash
+   xcrun notarytool store-credentials "notary-profile" \
+     --apple-id "<Apple ID>" --team-id "<Team ID>"
+   ```
+
+3. 建置後，執行簽章、公證與釘選：
+
+   ```bash
+   bash build.command
+   bash sign-and-notarize.command
+   ```
+
+腳本會用 Hardened Runtime 簽署 App 的副本，透過 `notarytool` 送出公證、釘選公證票證、用 `spctl` 檢查，最後在專案資料夾產生 `LightDOCXViewer-<版本>.zip`，可直接上傳到 GitHub Releases。
+
+- 只簽章、不公證（本機測試用）：
+
+  ```bash
+  bash sign-and-notarize.command --sign-only
+  ```
+
+  會產生 `LightDOCXViewer-<版本>-unnotarized.zip`。
+- 可選的環境變數：`SIGN_IDENTITY`（預設為第一個 Developer ID Application 憑證）與 `NOTARY_PROFILE`（預設為 `notary-profile`）。
+- 簽章會在暫存目錄進行，因為 iCloud 雲碟等同步服務會不斷在同步資料夾中加回 Finder 中繼資料，導致 `codesign` 失敗。
+- 切勿將 Apple ID、App 專用密碼或發佈用 zip 檔 commit 到 repository。
+
 ## 使用方式
 
 開啟 App 後按 `⌘O` 選擇 `.docx` 檔案。也可以在 Finder 中對 DOCX 按右鍵，選擇**「打開檔案的應用程式」→ Light DOCX Viewer**。
@@ -77,6 +109,7 @@
 ├── AppIcon.png             # macOS App 圖示的原始圖檔
 ├── Info.plist              # App bundle 資訊與 DOCX 檔案關聯
 ├── build.command           # 一鍵建置 macOS App 與產生圖示
+├── sign-and-notarize.command  # Developer ID 簽章、公證與釘選
 ├── LICENSE                 # MIT 授權
 ├── README.md               # 英文說明文件
 └── README.*.md             # 其他語言的說明文件
