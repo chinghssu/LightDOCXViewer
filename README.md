@@ -4,7 +4,7 @@ A minimal, native macOS reader for `.docx` files that puts **text and inline ima
 
 Designed for a simple workflow: open a document, read its contents, copy text, and copy embedded images into another app.
 
-> **Status: early prototype (v0.1.2).** The project has not yet been fully compiled and tested on macOS. Expect compatibility issues. Contributions and bug reports are welcome.
+> **Status: early prototype (v0.1.2).** Builds and runs on macOS. Some DOCX files may not display completely. Contributions and bug reports are welcome.
 
 ## Features
 
@@ -75,6 +75,7 @@ This is a **content-oriented reader**, not a layout-faithful Word renderer.
 ├── AppIcon.png             # Source artwork for the macOS app icon
 ├── Info.plist              # App bundle metadata and DOCX file association
 ├── build.command           # One-command macOS build and icon generation
+├── LICENSE                 # MIT License
 └── README.md
 ```
 
@@ -90,7 +91,9 @@ Bug reports, reproducible sample documents (with sensitive information removed),
 
 ## License
 
-**License not yet selected.** Before publishing this repository for open-source reuse, add a `LICENSE` file (for example, MIT if you want a permissive license) and replace this section with the chosen license. Without an explicit license, public visibility on GitHub does not by itself grant others permission to reuse or redistribute the code.
+Released under the [MIT License](LICENSE).
+
+Microsoft and Word are trademarks of Microsoft Corporation. This project is not affiliated with or endorsed by Microsoft.
 
 ---
 
@@ -117,3 +120,7 @@ Light DOCX Viewer 是一個不需要 Word、Pages 或 Python 的原生 AppKit DO
 - 不重現原始字型、頁面、表格格線與欄位排版。
 - 浮動圖片、VML 舊式圖片、文字方塊、註解、頁首、頁尾、註腳、外部連結圖片可能無法顯示。
 - 開啟時解壓縮至暫存目錄，載入後立即清除。
+
+### 授權
+
+本專案以 [MIT License](LICENSE) 釋出。
