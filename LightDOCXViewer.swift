@@ -183,6 +183,8 @@ final class ReaderTextView: NSTextView {
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var window: NSWindow!
     private var textView: ReaderTextView!
+    /// Holds a Finder open request that arrives before the window exists.
+    private var pendingURL: URL?
 
     /// Creates a native read-only viewer and opens any file passed on the command line.
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -214,7 +216,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         self.textView = viewer
         buildMenu()
 
-        if CommandLine.arguments.count > 1 {
+        if let url = pendingURL {
+            pendingURL = nil
+            showDocument(url)
+        } else if CommandLine.arguments.count > 1 {
             showDocument(URL(fileURLWithPath: CommandLine.arguments[1]))
         } else {
             showWelcome()
@@ -224,7 +229,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     /// Accepts Finder's Open With / double-click document requests.
     func application(_ sender: NSApplication, openFile filename: String) -> Bool {
-        showDocument(URL(fileURLWithPath: filename))
+        let url = URL(fileURLWithPath: filename)
+        // Finder may deliver this before applicationDidFinishLaunching builds the window.
+        guard textView != nil else { pendingURL = url; return true }
+        showDocument(url)
         return true
     }
 
